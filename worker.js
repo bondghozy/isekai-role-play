@@ -7,7 +7,7 @@ const hex = bytes => [...new Uint8Array(bytes)].map(v => v.toString(16).padStart
 const randomHex = size => { const value = new Uint8Array(size); crypto.getRandomValues(value); return hex(value); };
 async function passwordHash(password, salt) {
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
-  return hex(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: encoder.encode(salt), iterations: 120000, hash: "SHA-256" }, key, 256));
+  return hex(await crypto.subtle.deriveBits({ name: "PBKDF2", salt: encoder.encode(salt), iterations: 10000, hash: "SHA-256" }, key, 256));
 }
 
 export class IsekaiServer extends DurableObject {
