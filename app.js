@@ -176,6 +176,8 @@ let queuedIceCandidates = [];
 let feedPosts = [];
 let feedHasMore = false;
 let feedLoading = false;
+let feedSignature = "";
+let feedPollTimer = null;
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 const whiterunQuests = [
@@ -439,6 +441,7 @@ function renderDashboard() {
 
   renderStats();
   void renderFeed(true);
+  if(!feedPollTimer)feedPollTimer=window.setInterval(()=>{if(currentUser&&!document.hidden)void renderFeed(true,true);},4000);
   prefillSettingsForm();
   void refreshRealUsers();
 }
@@ -547,34 +550,41 @@ function renderStats() {
   });
 }
 
-async function renderFeed(reset = true) {
+function postTimeLabel(value) {
+  const created = new Date(value),seconds=Math.round((created.getTime()-Date.now())/1000),relative=new Intl.RelativeTimeFormat("id-ID",{numeric:"auto"});
+  return Math.abs(seconds)<60?relative.format(seconds,"second"):Math.abs(seconds)<3600?relative.format(Math.round(seconds/60),"minute"):Math.abs(seconds)<86400?relative.format(Math.round(seconds/3600),"hour"):relative.format(Math.round(seconds/86400),"day");
+}
+async function renderFeed(reset = true, silent = false) {
   if (feedLoading) return;
   feedLoading = true;
   const feedList = document.querySelector("#feedList");
-  if (reset) { feedPosts = []; feedList.innerHTML = `<p class="feed-loading">Memuat status terbaru...</p>`; }
+  if (reset) { feedPosts = []; if(!silent)feedList.innerHTML = `<p class="feed-loading">Memuat status terbaru...</p>`; }
   const result = await window.accountDB.getPosts(feedPosts.length, 10);
   if (!result?.posts) { feedList.innerHTML = `<p class="feed-loading">${escapeHtml(result?.error || "Status belum dapat dimuat.")}</p>`; feedLoading = false; return; }
   feedPosts.push(...result.posts);
   feedHasMore = Boolean(result.hasMore);
+  const signature=JSON.stringify(feedPosts.map(post=>[post.id,post.likeCount,post.liked,post.comments?.length]));
+  if(silent&&signature===feedSignature){document.querySelectorAll("[data-post-time]").forEach(node=>node.textContent=postTimeLabel(node.dataset.postTime));feedLoading=false;return;}
+  feedSignature=signature;
   feedList.innerHTML = "";
   feedPosts.forEach((post) => {
     const card = document.createElement("article");
     card.className = "post-card";
     const media = renderPostMedia(post);
-    const created = new Date(post.createdAt);
-    const relative = new Intl.RelativeTimeFormat("id-ID", { numeric: "auto" });
-    const seconds = Math.round((created.getTime() - Date.now()) / 1000);
-    const timeLabel = Math.abs(seconds) < 60 ? relative.format(seconds, "second") : Math.abs(seconds) < 3600 ? relative.format(Math.round(seconds / 60), "minute") : Math.abs(seconds) < 86400 ? relative.format(Math.round(seconds / 3600), "hour") : relative.format(Math.round(seconds / 86400), "day");
+    const timeLabel=postTimeLabel(post.createdAt),comments=(post.comments||[]).map(comment=>`<div class="post-comment"><span>${comment.avatar?`<img src="${escapeHtml(comment.avatar)}" alt="">`:escapeHtml(comment.author.slice(0,2).toUpperCase())}</span><p><strong>${escapeHtml(comment.author)}</strong>${escapeHtml(comment.text)}<small>${escapeHtml(postTimeLabel(comment.createdAt))}</small></p></div>`).join("");
+    card.dataset.postId=post.id;
     card.innerHTML = `
       <div class="post-head">
         ${post.avatar ? `<img class="post-avatar" src="${post.avatar}" alt="Foto profil ${escapeHtml(post.author)}">` : `<span class="post-avatar">${escapeHtml(post.author.slice(0, 2).toUpperCase())}</span>`}
         <div>
           <strong>${escapeHtml(post.author)}</strong>
-          <p class="private-note">Lv. ${post.level} ${escapeHtml(post.job)} · ${escapeHtml(timeLabel)}${post.isFriend ? " · Teman" : ""}</p>
+          <p class="private-note">Lv. ${post.level} ${escapeHtml(post.job)} · <span data-post-time="${escapeHtml(post.createdAt)}" title="${new Date(post.createdAt).toLocaleString("id-ID")}">${escapeHtml(timeLabel)}</span>${post.isFriend ? " · Teman" : ""}</p>
         </div>
       </div>
-      <p>${escapeHtml(post.text)}</p>
+      ${post.sharedFrom?`<p class="shared-label">↻ Membagikan status ${escapeHtml(post.sharedFrom)}</p>`:""}<p>${escapeHtml(post.text)}</p>
       ${media}
+      <div class="post-actions"><button type="button" class="${post.liked?"liked":""}" data-post-like="${post.id}">♥ <span>${post.likeCount||0}</span></button><button type="button" data-post-comment-toggle="${post.id}">💬 <span>${post.comments?.length||0}</span></button><button type="button" data-post-share="${post.id}">↻ Bagikan</button></div>
+      <div class="post-comments">${comments}<form data-post-comment-form="${post.id}"><input maxlength="500" placeholder="Tulis komentar..." aria-label="Komentar"><button type="submit">Kirim</button></form></div>
     `;
     feedList.append(card);
   });
@@ -594,6 +604,14 @@ function renderPostMedia(post) {
   }
   return `<img class="post-media" src="${post.media}" alt="Media status">`;
 }
+document.querySelector("#feedList").addEventListener("click",async event=>{
+  const like=event.target.closest("[data-post-like]");if(like){like.disabled=true;await window.accountDB.togglePostLike(like.dataset.postLike);await renderFeed(true,true);return;}
+  const share=event.target.closest("[data-post-share]");if(share){share.disabled=true;const result=await window.accountDB.sharePost(share.dataset.postShare);if(!result?.ok)window.alert(result?.error||"Status gagal dibagikan.");await renderFeed(true,true);}
+});
+document.querySelector("#feedList").addEventListener("submit",async event=>{
+  const form=event.target.closest("[data-post-comment-form]");if(!form)return;event.preventDefault();const input=form.querySelector("input"),text=input.value.trim();if(!text)return;form.querySelector("button").disabled=true;const result=await window.accountDB.commentPost(form.dataset.postCommentForm,text);if(!result?.ok)window.alert(result?.error||"Komentar gagal dikirim.");await renderFeed(true,true);
+});
+window.addEventListener("feed:update",()=>{if(currentUser)void renderFeed(true,true);});
 
 async function resetAccount() {
   await window.accountDB.logout();

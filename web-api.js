@@ -21,6 +21,9 @@
     sendMessage: (recipientEmail, body, mediaType = "", mediaData = "") => request("/api/messages", { method: "POST", body: JSON.stringify({ recipientEmail, body, mediaType, mediaData }) }),
     getPosts: (offset = 0, limit = 10) => request(`/api/posts?offset=${offset}&limit=${limit}`),
     createPost: (body, mediaType = "", mediaData = "") => request("/api/posts", { method: "POST", body: JSON.stringify({ body, mediaType, mediaData }) }),
+    togglePostLike: (postId) => request(`/api/posts/${postId}/like`, { method: "POST", body: "{}" }),
+    commentPost: (postId, body) => request(`/api/posts/${postId}/comments`, { method: "POST", body: JSON.stringify({ body }) }),
+    sharePost: (postId) => request(`/api/posts/${postId}/share`, { method: "POST", body: "{}" }),
     sendSignal: (type, recipientEmail, payload = {}) => request("/api/signals", { method: "POST", body: JSON.stringify({ type, recipientEmail, payload }) }),
     getSignals: (after = 0) => request(`/api/signals?after=${after}`),
     requestFriend: (email) => request("/api/friends/request", { method: "POST", body: JSON.stringify({ email }) }),
@@ -39,7 +42,7 @@
     socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/presence`);
     socket.addEventListener("message", event => {
       const message = JSON.parse(event.data);
-      const eventName = message.type === "chat" ? "chat:update" : message.type === "signal" ? "realtime:signal" : "presence:update";
+      const eventName = message.type === "chat" ? "chat:update" : message.type === "signal" ? "realtime:signal" : message.type === "feed" ? "feed:update" : "presence:update";
       window.dispatchEvent(new CustomEvent(eventName, { detail: message }));
     });
     socket.addEventListener("close", () => { socket = null; if (shouldConnect) setTimeout(connect, 2000); });

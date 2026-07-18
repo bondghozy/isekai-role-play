@@ -1009,6 +1009,18 @@ textarea:focus {
 }
 .feed-loading { padding: 24px; color: var(--muted); text-align: center; }
 .feed-load-more { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--gold); background: rgba(244,201,107,.06); cursor: pointer; }
+.shared-label { margin: 8px 0; color: var(--teal); font-size: .78rem; font-weight: 750; }
+.post-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.post-actions button { flex: 1; padding: 9px; border: 0; border-radius: 10px; color: var(--muted); background: rgba(255,255,255,.04); cursor: pointer; transition: color .18s ease,background .18s ease,transform .18s ease; }
+.post-actions button:hover { color: var(--paper); background: rgba(255,255,255,.08); transform: translateY(-1px); }
+.post-actions button.liked { color: #ff6f91; background: rgba(255,76,120,.12); }
+.post-comments { display: grid; gap: 8px; margin-top: 10px; }
+.post-comment { display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: start; }
+.post-comment > span { display: grid; place-items: center; width: 32px; height: 32px; overflow: hidden; border-radius: 50%; color: var(--ink); background: var(--gold); font-size: .65rem; font-weight: 850; }
+.post-comment img { width: 100%; height: 100%; object-fit: cover; }
+.post-comment p { margin: 0; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.045); font-size: .78rem; }
+.post-comment strong,.post-comment small { display: block; }.post-comment small { margin-top: 3px; color: var(--muted); font-size: .62rem; }
+.post-comments form { display: flex; gap: 7px; }.post-comments input { flex: 1; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 10px; color: var(--paper); background: rgba(8,12,19,.75); }.post-comments form button { padding: 9px 12px; border: 0; border-radius: 9px; color: var(--ink); background: var(--gold); font-weight: 800; cursor: pointer; }
 
 .post-card {
   padding: 18px;
