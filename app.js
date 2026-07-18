@@ -144,6 +144,10 @@ const profileDrawer = document.querySelector("#profileDrawer");
 const openProfileDrawer = document.querySelector("#openProfileDrawer");
 const closeProfileDrawer = document.querySelector("#closeProfileDrawer");
 const settingsModal = document.querySelector("#settingsModal");
+const superUserModal = document.querySelector("#superUserModal");
+const superUserLoginForm = document.querySelector("#superUserLoginForm");
+const superUserPanel = document.querySelector("#superUserPanel");
+const superUserAccounts = document.querySelector("#superUserAccounts");
 const closeSettingsButton = document.querySelector("#closeSettingsButton");
 const createPartyButton = document.querySelector("#createPartyButton");
 const partyCount = document.querySelector("#partyCount");
@@ -1064,6 +1068,11 @@ document.querySelector("#deleteAccountButton").addEventListener("click", async (
   currentUser = null;
   syncRoute();
 });
+document.querySelector("#superUserButton").addEventListener("click", () => { settingsModal.classList.add("hidden"); superUserModal.classList.remove("hidden"); superUserLoginForm.classList.remove("hidden"); superUserPanel.classList.add("hidden"); document.querySelector("#superUserId").focus(); });
+document.querySelector("#closeSuperUserButton").addEventListener("click", () => superUserModal.classList.add("hidden"));
+document.querySelector("#superUserBackButton").addEventListener("click", () => { superUserPanel.classList.add("hidden"); superUserLoginForm.classList.remove("hidden"); });
+superUserLoginForm.addEventListener("submit", async (event) => { event.preventDefault(); const result = await window.accountDB.superLogin(document.querySelector("#superUserId").value.trim(), document.querySelector("#superUserPassword").value); if (!result?.ok) { document.querySelector("#superUserHint").textContent = result?.error || "Akses ditolak."; return; } superUserLoginForm.classList.add("hidden"); superUserPanel.classList.remove("hidden"); await refreshSuperUsers(); });
+async function refreshSuperUsers() { const users = await window.accountDB.superAccounts(); superUserAccounts.innerHTML = users.map(user => `<div class="super-user-account"><span><strong>${escapeHtml(user.nickname || user.username)}</strong><small>${escapeHtml(user.email)} · dibuat ${escapeHtml(new Date(user.createdAt || Date.now()).toLocaleString("id-ID"))}</small></span><button class="danger-button" data-super-delete="${user.id}" type="button">Hapus</button></div>`).join("") || "<p>Belum ada akun.</p>"; superUserAccounts.querySelectorAll("[data-super-delete]").forEach(button => button.addEventListener("click", async () => { if (!confirm("Hapus akun ini beserta semua datanya?")) return; const result = await window.accountDB.superDeleteAccount(button.dataset.superDelete); if (!result?.ok) alert(result?.error || "Gagal menghapus akun."); else await refreshSuperUsers(); })); }
 
 function renderParty() {
   partyCount.textContent = `${partyMemberCount}/5`;

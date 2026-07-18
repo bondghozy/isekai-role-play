@@ -17,6 +17,7 @@ export class IsekaiServer extends DurableObject {
     for (const statement of [
       "CREATE TABLE IF NOT EXISTS accounts(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT UNIQUE NOT NULL,username TEXT NOT NULL,password_hash TEXT NOT NULL,password_salt TEXT NOT NULL,user_json TEXT NOT NULL,updated_at TEXT NOT NULL)",
       "CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,account_id INTEGER NOT NULL,created_at TEXT NOT NULL)",
+      "CREATE TABLE IF NOT EXISTS super_sessions(token TEXT PRIMARY KEY,created_at TEXT NOT NULL)",
       "CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT,sender_id INTEGER NOT NULL,recipient_id INTEGER NOT NULL,body TEXT NOT NULL,sent_at TEXT NOT NULL,media_type TEXT,media_data TEXT,read_at TEXT)",
       "CREATE TABLE IF NOT EXISTS friendships(user_one INTEGER NOT NULL,user_two INTEGER NOT NULL,created_at TEXT NOT NULL,UNIQUE(user_one,user_two))",
       "CREATE TABLE IF NOT EXISTS friend_requests(id INTEGER PRIMARY KEY AUTOINCREMENT,sender_id INTEGER NOT NULL,recipient_id INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL,UNIQUE(sender_id,recipient_id))"
@@ -33,6 +34,7 @@ export class IsekaiServer extends DurableObject {
   one(query, ...args) { return [...this.sql.exec(query, ...args)][0] || null; }
   all(query, ...args) { return [...this.sql.exec(query, ...args)]; }
   account(request) { const token = cookie(request).isekai_session; return token ? this.one("SELECT a.* FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token=?", token) : null; }
+  super(request) { const token=cookie(request).isekai_super; return token ? this.one("SELECT token FROM super_sessions WHERE token=?",token) : null; }
   friends(a, b) { return this.one("SELECT 1 ok FROM friendships WHERE user_one=? AND user_two=?", Math.min(a,b), Math.max(a,b)); }
   sockets() { return this.ctx.getWebSockets(); }
   sendTo(id, value) { let delivered=false;for (const ws of this.sockets()) { const info = ws.deserializeAttachment(); if (info?.accountId === id) try { ws.send(JSON.stringify(value));delivered=true; } catch {} }return delivered; }
@@ -64,6 +66,10 @@ export class IsekaiServer extends DurableObject {
       const token=randomHex(32),now=new Date().toISOString(); this.sql.exec("INSERT INTO sessions VALUES(?,?,?)",token,row.id,now); this.sql.exec("UPDATE accounts SET updated_at=? WHERE id=?",now,row.id);
       return json({ok:true,user:JSON.parse(row.user_json)},200,{"set-cookie":`isekai_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`});
     }
+    if(method==="POST"&&path==="/api/superuser/login"){if(String(value.id||"")!=="admin007"||String(value.password||"")!=="admin007")return json({ok:false,error:"ID atau password Super User salah."},401);const token=randomHex(32);this.sql.exec("INSERT INTO super_sessions VALUES(?,?)",token,new Date().toISOString());return json({ok:true},200,{"set-cookie":`isekai_super=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`});}
+    if(path.startsWith("/api/superuser/")&&!this.super(request))return json({ok:false,error:"Akses Super User ditolak."},403);
+    if(method==="GET"&&path==="/api/superuser/accounts"){return json(this.all("SELECT id,email,username,user_json,updated_at FROM accounts ORDER BY id DESC").map(row=>{const u=JSON.parse(row.user_json);return{id:row.id,email:row.email,username:row.username,nickname:u.nickname||u.username,createdAt:u.createdAt||row.updated_at};}));}
+    const adminDelete=path.match(/^\/api\/superuser\/accounts\/(\d+)$/);if(method==="DELETE"&&adminDelete){const id=Number(adminDelete[1]);for(const table of ["messages","signals","post_likes","post_comments","posts","friend_requests","friendships","sessions"]){if(table==="post_likes"||table==="post_comments")this.sql.exec(`DELETE FROM ${table} WHERE account_id=? OR post_id IN (SELECT id FROM posts WHERE account_id=?)`,id,id);else if(table==="posts")this.sql.exec("DELETE FROM posts WHERE account_id=?",id);else if(table==="friendships")this.sql.exec("DELETE FROM friendships WHERE user_one=? OR user_two=?",id,id);else if(table==="friend_requests")this.sql.exec("DELETE FROM friend_requests WHERE sender_id=? OR recipient_id=?",id,id);else if(table==="sessions")this.sql.exec("DELETE FROM sessions WHERE account_id=?",id);else this.sql.exec(`DELETE FROM ${table} WHERE sender_id=? OR recipient_id=?`,id,id);}this.sql.exec("DELETE FROM accounts WHERE id=?",id);this.broadcast();return json({ok:true});}
     if (method === "GET" && path === "/api/session") return json(user ? JSON.parse(user.user_json) : null);
     if (!user) return json({error:"Sesi berakhir."},401);
     if (method === "POST" && path === "/api/save") { this.sql.exec("UPDATE accounts SET username=?,user_json=?,updated_at=? WHERE id=?",value.username,JSON.stringify(value),new Date().toISOString(),user.id); this.broadcast(); return json(true); }

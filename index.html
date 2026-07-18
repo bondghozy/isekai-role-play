@@ -260,7 +260,16 @@
           <button class="secondary-button full" type="button" id="rerollButton">Reroll Stat</button>
           <button class="secondary-button full" type="button" id="settingsLogoutButton">Logout</button>
           <button class="danger-button full" type="button" id="deleteAccountButton">Hapus Akun</button>
+          <button class="secondary-button full super-user-button" type="button" id="superUserButton">🔐 Super User</button>
         </form>
+      </div>
+    </div>
+
+    <div class="settings-modal hidden" id="superUserModal" role="dialog" aria-modal="true" aria-labelledby="superUserTitle">
+      <div class="settings-dialog super-user-dialog">
+        <div class="settings-dialog-header"><div><p class="eyebrow">Akses terbatas</p><h3 id="superUserTitle">Super User</h3></div><button class="close-button" id="closeSuperUserButton" type="button">×</button></div>
+        <form id="superUserLoginForm"><label>ID<input id="superUserId" required autocomplete="username"></label><label>Password<input id="superUserPassword" type="password" required autocomplete="current-password"></label><p id="superUserHint" class="auth-hint"></p><button class="primary-button full" type="submit">Masuk</button></form>
+        <section id="superUserPanel" class="hidden"><div class="super-user-toolbar"><strong>Database akun</strong><button class="secondary-button" id="superUserBackButton" type="button">Kembali</button></div><div id="superUserAccounts" class="super-user-accounts"></div></section>
       </div>
     </div>
 
