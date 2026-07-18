@@ -19,14 +19,18 @@
     listUsers: () => request("/api/users"),
     getMessages: (email) => request(`/api/messages?email=${encodeURIComponent(email)}`),
     sendMessage: (recipientEmail, body, mediaType = "", mediaData = "") => request("/api/messages", { method: "POST", body: JSON.stringify({ recipientEmail, body, mediaType, mediaData }) }),
+    getPosts: (offset = 0, limit = 10) => request(`/api/posts?offset=${offset}&limit=${limit}`),
+    createPost: (body, mediaType = "", mediaData = "") => request("/api/posts", { method: "POST", body: JSON.stringify({ body, mediaType, mediaData }) }),
+    sendSignal: (type, recipientEmail, payload = {}) => request("/api/signals", { method: "POST", body: JSON.stringify({ type, recipientEmail, payload }) }),
+    getSignals: (after = 0) => request(`/api/signals?after=${after}`),
     requestFriend: (email) => request("/api/friends/request", { method: "POST", body: JSON.stringify({ email }) }),
     respondFriend: (email, accept) => request("/api/friends/respond", { method: "POST", body: JSON.stringify({ email, accept }) })
   };
   let socket, shouldConnect = false;
   window.realtime = {
     send: (type, recipientEmail, payload = {}) => {
-      if (socket?.readyState !== WebSocket.OPEN) return false;
-      socket.send(JSON.stringify({ type, recipientEmail, payload }));
+      if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type, recipientEmail, payload }));
+      else void window.accountDB.sendSignal(type, recipientEmail, payload);
       return true;
     }
   };
@@ -42,4 +46,15 @@
   }
   window.addEventListener("account:connected", () => { shouldConnect = true; connect(); });
   window.addEventListener("account:disconnected", () => { shouldConnect = false; socket?.close(); });
+  let lastSignalId = 0;
+  window.setInterval(async () => {
+    if (!shouldConnect) return;
+    const messages = await window.accountDB.getSignals(lastSignalId);
+    if (!Array.isArray(messages)) return;
+    messages.forEach(message => {
+      lastSignalId = Math.max(lastSignalId, Number(message.id) || 0);
+      const eventName = message.type === "chat" ? "chat:update" : "realtime:signal";
+      window.dispatchEvent(new CustomEvent(eventName, { detail: message }));
+    });
+  }, 2000);
 })();

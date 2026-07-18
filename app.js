@@ -173,6 +173,9 @@ let localCallStream = null;
 let activeCall = null;
 let pendingCall = null;
 let queuedIceCandidates = [];
+let feedPosts = [];
+let feedHasMore = false;
+let feedLoading = false;
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 const whiterunQuests = [
@@ -435,7 +438,7 @@ function renderDashboard() {
   document.querySelector("#miniProfileJob").className = `mini-profile-job ${job.colorClass}`;
 
   renderStats();
-  renderFeed();
+  void renderFeed(true);
   prefillSettingsForm();
   void refreshRealUsers();
 }
@@ -544,21 +547,30 @@ function renderStats() {
   });
 }
 
-function renderFeed() {
+async function renderFeed(reset = true) {
+  if (feedLoading) return;
+  feedLoading = true;
   const feedList = document.querySelector("#feedList");
-  const posts = loadPosts();
+  if (reset) { feedPosts = []; feedList.innerHTML = `<p class="feed-loading">Memuat status terbaru...</p>`; }
+  const result = await window.accountDB.getPosts(feedPosts.length, 10);
+  if (!result?.posts) { feedList.innerHTML = `<p class="feed-loading">${escapeHtml(result?.error || "Status belum dapat dimuat.")}</p>`; feedLoading = false; return; }
+  feedPosts.push(...result.posts);
+  feedHasMore = Boolean(result.hasMore);
   feedList.innerHTML = "";
-
-  posts.forEach((post) => {
+  feedPosts.forEach((post) => {
     const card = document.createElement("article");
     card.className = "post-card";
     const media = renderPostMedia(post);
+    const created = new Date(post.createdAt);
+    const relative = new Intl.RelativeTimeFormat("id-ID", { numeric: "auto" });
+    const seconds = Math.round((created.getTime() - Date.now()) / 1000);
+    const timeLabel = Math.abs(seconds) < 60 ? relative.format(seconds, "second") : Math.abs(seconds) < 3600 ? relative.format(Math.round(seconds / 60), "minute") : Math.abs(seconds) < 86400 ? relative.format(Math.round(seconds / 3600), "hour") : relative.format(Math.round(seconds / 86400), "day");
     card.innerHTML = `
       <div class="post-head">
         ${post.avatar ? `<img class="post-avatar" src="${post.avatar}" alt="Foto profil ${escapeHtml(post.author)}">` : `<span class="post-avatar">${escapeHtml(post.author.slice(0, 2).toUpperCase())}</span>`}
         <div>
           <strong>${escapeHtml(post.author)}</strong>
-          <p class="private-note">${escapeHtml(post.meta)}</p>
+          <p class="private-note">Lv. ${post.level} ${escapeHtml(post.job)} · ${escapeHtml(timeLabel)}${post.isFriend ? " · Teman" : ""}</p>
         </div>
       </div>
       <p>${escapeHtml(post.text)}</p>
@@ -566,6 +578,13 @@ function renderFeed() {
     `;
     feedList.append(card);
   });
+  if (!feedPosts.length) feedList.innerHTML = `<p class="feed-loading">Belum ada status. Jadilah yang pertama membagikan petualangan.</p>`;
+  if (feedHasMore) {
+    const more = document.createElement("button"); more.type="button"; more.className="feed-load-more"; more.textContent="Muat status lainnya";
+    more.addEventListener("click", () => void renderFeed(false)); feedList.append(more);
+    const observer = new IntersectionObserver(entries => { if (entries[0]?.isIntersecting) { observer.disconnect(); void renderFeed(false); } }, { rootMargin: "240px" }); observer.observe(more);
+  }
+  feedLoading = false;
 }
 
 function renderPostMedia(post) {
@@ -937,6 +956,7 @@ profileForm.addEventListener("submit", (event) => {
 
 postMedia.addEventListener("change", async (event) => {
   const file = event.target.files[0];
+  if (file && file.size > 7_000_000) { event.target.value = ""; selectedPostMedia = null; document.querySelector("#mediaName").textContent = "Gambar/video maksimal 7 MB."; return; }
   selectedPostMedia = file
     ? { data: await fileToDataUrl(file), type: file.type, name: file.name }
     : null;
@@ -945,28 +965,17 @@ postMedia.addEventListener("change", async (event) => {
     : "Belum ada media dipilih.";
 });
 
-postForm.addEventListener("submit", (event) => {
+postForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = document.querySelector("#postText").value.trim();
-  if (!text) return;
+  if (!text && !selectedPostMedia) return;
 
-  const job = jobConfig[currentUser.job];
-  const posts = loadPosts();
-  posts.unshift({
-    id: crypto.randomUUID(),
-    author: currentUser.nickname,
-    meta: `Lv. ${currentUser.level} ${currentUser.job} - ${job.name}`,
-    avatar: currentUser.photo,
-    text,
-    media: selectedPostMedia ? selectedPostMedia.data : null,
-    mediaType: selectedPostMedia ? selectedPostMedia.type : null
-  });
-
-  savePosts(posts);
+  const result = await window.accountDB.createPost(text, selectedPostMedia?.type || "", selectedPostMedia?.data || "");
+  if (!result?.ok) { document.querySelector("#mediaName").textContent = result?.error || "Status gagal dikirim."; return; }
   postForm.reset();
   selectedPostMedia = null;
   document.querySelector("#mediaName").textContent = "Belum ada media dipilih.";
-  renderFeed();
+  await renderFeed(true);
 });
 
 settingsPhoto.addEventListener("change", async (event) => {

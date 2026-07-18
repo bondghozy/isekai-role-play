@@ -1007,6 +1007,8 @@ textarea:focus {
   display: grid;
   gap: 16px;
 }
+.feed-loading { padding: 24px; color: var(--muted); text-align: center; }
+.feed-load-more { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--gold); background: rgba(244,201,107,.06); cursor: pointer; }
 
 .post-card {
   padding: 18px;
