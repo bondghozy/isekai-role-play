@@ -441,6 +441,7 @@ function renderDashboard() {
 
   renderStats();
   void renderFeed(true);
+  void refreshNotifications();
   if(!feedPollTimer)feedPollTimer=window.setInterval(()=>{if(currentUser&&!document.hidden)void renderFeed(true,true);},4000);
   prefillSettingsForm();
   void refreshRealUsers();
@@ -580,6 +581,7 @@ async function renderFeed(reset = true, silent = false) {
           <strong>${escapeHtml(post.author)}</strong>
           <p class="private-note">Lv. ${post.level} ${escapeHtml(post.job)} · <span data-post-time="${escapeHtml(post.createdAt)}" title="${new Date(post.createdAt).toLocaleString("id-ID")}">${escapeHtml(timeLabel)}</span>${post.isFriend ? " · Teman" : ""}</p>
         </div>
+        ${post.isOwner?`<button class="post-delete" type="button" data-post-delete="${post.id}" title="Hapus status" aria-label="Hapus status">⋯</button>`:""}
       </div>
       ${post.sharedFrom?`<p class="shared-label">↻ Membagikan status ${escapeHtml(post.sharedFrom)}</p>`:""}<p>${escapeHtml(post.text)}</p>
       ${media}
@@ -607,11 +609,20 @@ function renderPostMedia(post) {
 document.querySelector("#feedList").addEventListener("click",async event=>{
   const like=event.target.closest("[data-post-like]");if(like){like.disabled=true;await window.accountDB.togglePostLike(like.dataset.postLike);await renderFeed(true,true);return;}
   const share=event.target.closest("[data-post-share]");if(share){share.disabled=true;const result=await window.accountDB.sharePost(share.dataset.postShare);if(!result?.ok)window.alert(result?.error||"Status gagal dibagikan.");await renderFeed(true,true);}
+  const remove=event.target.closest("[data-post-delete]");if(remove&&window.confirm("Hapus status ini?")){remove.disabled=true;const result=await window.accountDB.deletePost(remove.dataset.postDelete);if(!result?.ok)window.alert(result?.error||"Status gagal dihapus.");await renderFeed(true,true);}
 });
 document.querySelector("#feedList").addEventListener("submit",async event=>{
   const form=event.target.closest("[data-post-comment-form]");if(!form)return;event.preventDefault();const input=form.querySelector("input"),text=input.value.trim();if(!text)return;form.querySelector("button").disabled=true;const result=await window.accountDB.commentPost(form.dataset.postCommentForm,text);if(!result?.ok)window.alert(result?.error||"Komentar gagal dikirim.");await renderFeed(true,true);
 });
 window.addEventListener("feed:update",()=>{if(currentUser)void renderFeed(true,true);});
+const notificationPanel=document.querySelector("#notificationPanel"),notificationBadge=document.querySelector("#notificationBadge"),notificationList=document.querySelector("#notificationList");
+function notificationText(item){return item.type==="like"?`${item.actor} menyukai statusmu.`:item.type==="comment"?`${item.actor} mengomentari statusmu.`:item.type==="share"?`${item.actor} membagikan ulang statusmu.`:`${item.actor} membuat status baru.`;}
+async function refreshNotifications(){if(!currentUser)return;const items=await window.accountDB.getNotifications();if(!Array.isArray(items))return;const unread=items.filter(item=>!item.read).length;notificationBadge.textContent=unread>99?"99+":String(unread);notificationBadge.dataset.count=String(unread);notificationList.innerHTML=items.length?items.map(item=>`<button class="notification-item ${item.read?"":"unread"}" type="button" data-notification-post="${item.postId||""}">${item.avatar?`<img src="${escapeHtml(item.avatar)}" alt="">`:`<span>${escapeHtml(item.actor.slice(0,2).toUpperCase())}</span>`}<span><strong>${escapeHtml(notificationText(item))}</strong><small>${escapeHtml(postTimeLabel(item.createdAt))}</small></span></button>`).join(""):`<p class="feed-loading">Belum ada notifikasi.</p>`;}
+document.querySelector("#notificationButton").addEventListener("click",async()=>{notificationPanel.classList.toggle("hidden");if(!notificationPanel.classList.contains("hidden")){await refreshNotifications();await window.accountDB.readNotifications();await refreshNotifications();}});
+document.querySelector("#closeNotificationButton").addEventListener("click",()=>notificationPanel.classList.add("hidden"));
+notificationList.addEventListener("click",event=>{const item=event.target.closest("[data-notification-post]");if(item){notificationPanel.classList.add("hidden");document.querySelector(`[data-post-id="${CSS.escape(item.dataset.notificationPost)}"]`)?.scrollIntoView({behavior:"smooth",block:"center"});}});
+window.addEventListener("notification:update",()=>void refreshNotifications());
+window.setInterval(()=>{if(currentUser&&!document.hidden)void refreshNotifications();},5000);
 
 async function resetAccount() {
   await window.accountDB.logout();
