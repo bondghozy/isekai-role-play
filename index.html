@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Isekai Role Play</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="world-scene" aria-hidden="true">
+      <div class="moon"></div>
+      <div class="skyline">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <main class="app-shell">
+      <section class="auth-view" id="authView">
+        <div class="brand-panel">
+          <div class="brand-mark">IRP</div>
+          <p class="eyebrow">Idle RPG Social Network</p>
+          <h1>Isekai Role Play</h1>
+          <p class="brand-copy">
+            Sosmed petualang dari dunia lain. Bangun akun, pilih job, lalu tampilkan perkembangan karaktermu di feed.
+          </p>
+        </div>
+
+        <div class="auth-card auth-gate" id="authChoice">
+          <p class="eyebrow">Portal Akun</p>
+          <h2>Masuk ke Dunia Isekai</h2>
+          <p class="brand-copy small">
+            Pilih daftar untuk membuat karakter baru, atau login jika akunmu sudah pernah dibuat di browser ini.
+          </p>
+          <div class="gate-actions">
+            <button class="primary-button" type="button" data-auth-start="register">Daftar</button>
+            <button class="secondary-button" type="button" data-auth-start="login">Login</button>
+          </div>
+        </div>
+
+        <form class="auth-card hidden" id="authForm">
+          <button class="back-button" type="button" id="backToAuthChoice">Kembali</button>
+          <div class="tabs" role="tablist" aria-label="Mode akun">
+            <button class="tab-button active" type="button" data-auth-mode="register">Daftar</button>
+            <button class="tab-button" type="button" data-auth-mode="login">Masuk</button>
+          </div>
+
+          <label>
+            Nama Pengguna
+            <input id="username" name="username" type="text" autocomplete="username" placeholder="Contoh: Arka" required>
+          </label>
+
+          <label>
+            Email
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="nama@gmail.com" required>
+          </label>
+
+          <label>
+            Password
+            <input id="password" name="password" type="password" autocomplete="new-password" placeholder="Minimal 6 karakter" minlength="6" required>
+          </label>
+
+          <button class="primary-button" type="submit" id="authSubmit">Daftar Akun</button>
+
+          <p class="helper-text" id="authHint">
+            Akun dan progres tersimpan permanen dalam database lokal aplikasi.
+          </p>
+        </form>
+      </section>
+
+      <section class="job-view hidden" id="jobView">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Awakening</p>
+            <h2>Pilih Job Awal</h2>
+          </div>
+          <button class="ghost-button" type="button" id="resetFromJob">Ganti Akun</button>
+        </header>
+
+        <div class="job-grid" id="jobGrid" aria-label="Daftar job">
+          <article class="job-card" data-job="STR" tabindex="0">
+            <div class="job-character str" role="img" aria-label="Kesatria STR dengan pedang dan perisai"><div class="job-character-sprite"></div></div>
+            <div class="job-icon str">STR</div>
+            <h3>Strength</h3>
+            <p>Fokus pada ketahanan garis depan melalui VIT, DEF, dan M. DEF.</p>
+            <ul>
+              <li>VIT paling tinggi</li>
+              <li>DEF kuat</li>
+              <li>M. DEF stabil</li>
+            </ul>
+          </article>
+
+          <article class="job-card" data-job="INT" tabindex="0">
+            <div class="job-character int" role="img" aria-label="Penyihir INT dengan tongkat sihir"><div class="job-character-sprite"></div></div>
+            <div class="job-icon int">INT</div>
+            <h3>Intelligence</h3>
+            <p>Menguasai serangan magis serta peluang debuff dan ketahanan status.</p>
+            <ul>
+              <li>M. ATK paling tinggi</li>
+              <li>EFC kuat</li>
+              <li>RST stabil</li>
+            </ul>
+          </article>
+
+          <article class="job-card" data-job="AGI" tabindex="0">
+            <div class="job-character agi" role="img" aria-label="Asasin AGI dengan pedang pendek dan panah di punggung"><div class="job-character-sprite"></div></div>
+            <div class="job-icon agi">AGI</div>
+            <h3>Agility</h3>
+            <p>Menyerang cepat dengan damage fisik dan peluang kritikal lebih besar.</p>
+            <ul>
+              <li>ATK paling tinggi</li>
+              <li>SPD cepat</li>
+              <li>CRT tinggi</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="setup-view hidden" id="setupView">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Adventurer Registry</p>
+            <h2>Lengkapi Profil</h2>
+          </div>
+        </header>
+
+        <form class="setup-card" id="profileForm">
+          <div class="form-grid">
+            <label>
+              Nama Asli
+              <input id="realName" name="realName" type="text" autocomplete="name" placeholder="Data ini disembunyikan" required>
+            </label>
+            <label>
+              Alamat
+              <input id="address" name="address" type="text" autocomplete="street-address" placeholder="Data ini disembunyikan" required>
+            </label>
+            <label>
+              Nickname
+              <input id="nickname" name="nickname" type="text" placeholder="Nama yang tampil di akun" required>
+            </label>
+            <label>
+              Foto Profil
+              <input id="profilePhoto" name="profilePhoto" type="file" accept="image/*">
+            </label>
+          </div>
+          <div class="upload-preview">
+            <div class="avatar large" id="setupAvatar">IR</div>
+            <p>Nickname dan foto profil akan tampil di akun. Nama asli serta alamat tetap disimpan sebagai data pribadi.</p>
+          </div>
+          <button class="primary-button" type="submit">Masuk ke Sosmed</button>
+        </form>
+      </section>
+
+      <section class="dashboard hidden" id="dashboardView">
+        <header class="topbar social-topbar">
+          <div>
+            <p class="eyebrow">Isekai Feed</p>
+            <h2>Menu Sosmed</h2>
+          </div>
+          <button class="ghost-button" type="button" id="logoutButton">Keluar</button>
+        </header>
+
+        <div class="social-layout">
+          <aside class="profile-sidebar">
+            <button class="open-profile-drawer" id="openProfileDrawer" type="button"><span>☰</span> Profil</button>
+            <div class="mini-profile-job" id="miniProfileJob" role="img" aria-label="Karakter Job"><div></div></div>
+            <h3 id="miniCharacterName">Player</h3>
+            <p class="mini-profile-level">Level <strong id="miniLevelValue">1</strong></p>
+          </aside>
+
+          <section class="feed-panel">
+            <form class="composer" id="postForm">
+              <textarea id="postText" name="postText" rows="3" placeholder="Bagikan status petualanganmu..." required></textarea>
+              <div class="composer-actions">
+                <label class="file-pill">
+                  Upload Gambar/Video
+                  <input id="postMedia" name="postMedia" type="file" accept="image/*,video/*">
+                </label>
+                <button class="primary-button fit" type="submit">Kirim Status</button>
+              </div>
+              <p class="helper-text" id="mediaName">Belum ada media dipilih.</p>
+            </form>
+
+            <div class="feed-list" id="feedList"></div>
+          </section>
+
+          <aside class="community-sidebar">
+            <button class="settings-icon-button" type="button" id="settingsButton" aria-label="Buka pengaturan" title="Pengaturan">⚙</button>
+
+            <section class="community-card">
+              <div class="community-title"><span class="online-dot"></span><h3>Player Online</h3><button class="refresh-users" id="refreshOnlineUsers" type="button" title="Acak ulang pengguna aktif">↻ Refresh</button></div>
+              <p class="community-count" id="realUserCount">Belum ada pengguna lain</p>
+              <ul class="player-list" id="realUserList">
+                <li class="empty-social">Daftarkan akun lain agar muncul di sini.</li>
+              </ul>
+            </section>
+
+            <section class="community-card">
+              <div class="community-title"><h3>Friendlist</h3></div>
+              <ul class="player-list" id="friendUserList">
+                <li class="empty-social">Belum ada teman dari akun real.</li>
+              </ul>
+            </section>
+
+            <section class="community-card party-card">
+              <div class="community-title"><h3>Buat Party</h3><span id="partyCount">0/5</span></div>
+              <p>Maksimal 5 petualang dalam satu party.</p>
+              <div class="party-slots" aria-label="Slot party 0 dari 5"><span></span><span></span><span></span><span></span><span></span></div>
+              <button class="secondary-button full" type="button" id="createPartyButton">Buat Party</button>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <footer class="creator-credit" aria-label="Kredit pembuat">
+        <span class="creator-spark">✦</span>
+        <span>Made with <b>♥</b> by</span>
+        <strong>@Bond_Ghozy</strong>
+      </footer>
+    </main>
+
+    <div class="profile-drawer-backdrop hidden" id="profileDrawer" role="dialog" aria-modal="true" aria-labelledby="profileDrawerTitle">
+      <aside class="profile-drawer-panel">
+        <header><div><p class="eyebrow">Adventurer Profile</p><h2 id="profileDrawerTitle">Profil Karakter</h2></div><button class="close-button" id="closeProfileDrawer" type="button" aria-label="Tutup profil">×</button></header>
+        <div class="drawer-profile-hero">
+          <div class="avatar profile-photo" id="avatar">IR</div>
+          <div class="profile-job-character" id="profileJobCharacter" role="img" aria-label="Karakter job"><div class="profile-job-character-sprite"></div></div>
+          <div class="profile-summary"><h3 id="characterName">Player</h3><p class="job-label" id="jobLabel">Job</p></div>
+        </div>
+        <div class="drawer-personal-data">
+          <div><span>Nama Asli</span><strong id="profileRealName">-</strong></div>
+          <div><span>Email</span><strong id="accountEmail">email</strong></div>
+          <div><span>Alamat</span><strong id="profileAddress">-</strong></div>
+        </div>
+        <div class="character-status">
+          <div class="level-row"><span>Level</span><strong id="levelValue">1</strong></div>
+          <div class="xp-track" aria-label="Progress experience"><span id="xpProgress"></span></div>
+          <p class="xp-value" id="xpValue">0 / 100 XP</p>
+          <div class="stat-list compact" id="statList"></div>
+          <button class="storage-button hidden" id="storageButton" type="button" aria-label="Buka tas item"><span class="storage-button-icon">🎒</span><span><strong>Tas Item</strong><small><b id="profileItemCount">0</b> jenis item · <b id="profileGold">0</b> Gold</small></span><i>›</i></button>
+          <button class="profile-settings-button" id="profileSettingsButton" type="button">⚙ Edit Data Diri</button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="settings-modal hidden" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-dialog">
+        <div class="settings-dialog-header">
+          <div><p class="eyebrow">Akun</p><h3 id="settingsTitle">Data Pribadi</h3></div>
+          <button class="close-button" id="closeSettingsButton" type="button" aria-label="Tutup pengaturan">×</button>
+        </div>
+        <form id="settingsForm">
+          <label>Nickname<input id="settingsNickname" name="settingsNickname" type="text" required></label>
+          <label>Nama Asli<input id="settingsRealName" name="settingsRealName" type="text" required></label>
+          <label>Alamat<input id="settingsAddress" name="settingsAddress" type="text" required></label>
+          <label>Ganti Foto Profil<input id="settingsPhoto" name="settingsPhoto" type="file" accept="image/*"></label>
+          <button class="primary-button" type="submit">Simpan Pengaturan</button>
+          <button class="secondary-button full" type="button" id="rerollButton">Reroll Stat</button>
+          <button class="secondary-button full" type="button" id="settingsLogoutButton">Logout</button>
+          <button class="danger-button full" type="button" id="deleteAccountButton">Hapus Akun</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="portal-modal hidden" id="portalModal" role="dialog" aria-modal="true" aria-labelledby="portalTitle">
+      <div class="portal-dialog">
+        <div class="settings-dialog-header"><div><p class="eyebrow">Portal Petualangan</p><h3 id="portalTitle">Pilih Destinasi</h3></div><button class="close-button" id="closePortalButton" type="button" aria-label="Tutup portal">×</button></div>
+        <div id="citySelection">
+          <button class="city-card" type="button" id="whiterunButton"><span class="city-icon">♜</span><span><strong>Kota Whiterun</strong><small>Kota Kerajaan Whiterun. Cocok untuk petualang pemula mencari pekerjaan.</small></span><b>Masuk ›</b></button>
+        </div>
+        <section class="quest-board hidden" id="questBoard">
+          <button class="back-button" type="button" id="backToCities">← Kembali ke kota</button>
+          <div class="quest-board-heading"><div><p class="eyebrow">Kota Whiterun</p><h3>Quest Tersedia</h3></div><small id="questRefreshTime"></small></div>
+          <div class="active-quest hidden" id="activeQuest"></div>
+          <div class="quest-list" id="questList"></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="storage-modal hidden" id="storageModal" role="dialog" aria-modal="true" aria-labelledby="storageTitle">
+      <div class="storage-dialog"><div class="settings-dialog-header"><div><p class="eyebrow">Inventaris</p><h3 id="storageTitle">Storage</h3></div><button class="close-button" id="closeStorageButton" type="button" aria-label="Tutup storage">×</button></div><div class="gold-wallet">✦ <strong id="storageGold">0</strong> Gold</div><div class="inventory-list" id="inventoryList"></div></div>
+    </div>
+
+    <aside class="battle-taskbar hidden" id="battleTaskbar" aria-live="polite" aria-label="Pertarungan quest sedang berlangsung">
+      <div class="battle-stage">
+        <div class="battle-unit hero-unit">
+          <div class="battle-hp"><span id="heroBattleHp"></span></div>
+          <div class="battle-hero str" id="battleHero"><span></span></div>
+          <div class="party-fighters" id="partyFighters"></div>
+        </div>
+        <div class="battle-impact" aria-hidden="true">✦</div>
+        <div class="battle-unit enemy-unit">
+          <div class="battle-hp enemy-hp"><span id="enemyBattleHp"></span></div>
+          <div class="battle-enemy slime" id="battleEnemy"><span class="enemy-face"></span></div>
+        </div>
+      </div>
+      <div class="battle-info">
+        <div><strong id="battleEnemyName">Slime</strong><span id="battleQuestName">Quest berlangsung</span></div>
+        <b id="battleProgress">0%</b>
+      </div>
+      <div class="battle-progress"><span id="battleProgressBar"></span></div>
+    </aside>
+
+    <button class="chat-launcher hidden" id="chatLauncher" type="button" aria-label="Buka chat"><span>💬</span><b id="chatUnread" data-count="0">0</b></button>
+    <div class="message-toast-stack" id="messageToastStack" aria-live="polite" aria-atomic="false"></div>
+    <section class="chat-window hidden" id="chatWindow" aria-label="Jendela chat">
+      <header><div><strong id="chatTitle">Chat Teman</strong><small id="chatPresence">Pilih teman untuk mengobrol</small></div><div class="chat-header-actions"><button id="voiceCallButton" type="button" aria-label="Telepon suara" title="Telepon suara">☎</button><button id="videoCallButton" type="button" aria-label="Video call" title="Video call">▣</button><button id="closeChatButton" type="button" aria-label="Tutup chat">×</button></div></header>
+      <div class="chat-contacts" id="chatContacts"></div>
+      <div class="chat-history" id="chatHistory"><p class="chat-empty">Pilih teman dari daftar kontak.</p></div>
+      <form class="chat-form" id="chatForm">
+        <button class="emoji-toggle" id="emojiToggle" type="button" aria-label="Pilih emoji">☺</button>
+        <label class="chat-media-button" aria-label="Kirim foto atau video">＋<input id="chatMedia" type="file" accept="image/*,video/*"></label>
+        <label class="sr-only" for="chatInput">Tulis pesan</label><input id="chatInput" name="message" type="text" placeholder="Tulis pesan..." autocomplete="off"><button class="chat-send-button" type="submit">Kirim</button>
+        <div class="emoji-picker hidden" id="emojiPicker" aria-label="Daftar emoji"></div><div class="chat-media-preview hidden" id="chatMediaPreview"></div>
+      </form>
+    </section>
+
+    <section class="call-overlay hidden" id="callOverlay" role="dialog" aria-modal="true" aria-labelledby="callPeerName">
+      <div class="call-dialog">
+        <p class="eyebrow" id="callModeLabel">Panggilan suara</p><h3 id="callPeerName">Teman</h3><p id="callStatus">Menghubungkan...</p>
+        <div class="call-videos"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay playsinline muted></video></div>
+        <div class="incoming-call-actions hidden" id="incomingCallActions"><button class="accept-call" id="acceptCallButton" type="button">Terima</button><button class="reject-call" id="rejectCallButton" type="button">Tolak</button></div>
+        <button class="end-call" id="endCallButton" type="button">Akhiri Panggilan</button>
+      </div>
+    </section>
+
+    <div class="quest-countdown hidden" id="questCountdown" role="dialog" aria-modal="true" aria-labelledby="countdownTitle">
+      <div><p class="eyebrow">Party Bersiap</p><h3 id="countdownTitle">Quest dimulai dalam</h3><strong id="countdownValue">5</strong><p id="countdownPartyText">Menunggu anggota Party masuk...</p><button id="cancelQuestCountdown" type="button">Cancel</button></div>
+    </div>
+
+    <nav class="bottom-taskbar hidden" id="taskbar" aria-label="Navigasi utama">
+      <button type="button" data-nav="feed">Feed</button>
+      <button type="button" data-nav="profile">Profil</button>
+      <button class="portal-button" type="button" id="portalButton" aria-label="Portal">
+        <span class="portal-quest-label hidden" id="portalQuestLabel"></span>
+        <span class="portal-core"></span>
+        <span class="portal-progress-label" id="portalProgressLabel">Portal</span>
+      </button>
+      <button type="button" data-nav="settings">Akun</button>
+      <button class="message-nav-button" type="button" data-nav="message">Message <b id="messageNavUnread" data-count="0">0</b></button>
+    </nav>
+    <div class="sound-controls" id="soundControls">
+      <button class="music-button" id="musicButton" type="button" aria-pressed="true" aria-label="Matikan soundtrack" title="Matikan soundtrack">
+        <svg class="sound-icon sound-icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zm0-8.77v2.06a7.5 7.5 0 0 1 0 13.42v2.06a9.5 9.5 0 0 0 0-17.54z"/></svg>
+        <svg class="sound-icon sound-icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.59 3 2.7-2.7-1.42-1.42-2.7 2.7-2.7-2.7-1.42 1.42 2.7 2.7-2.7 2.7 1.42 1.42 2.7-2.7 2.7 2.7 1.42-1.42-2.7-2.7z"/></svg>
+      </button>
+      <label class="volume-control" for="musicVolume">
+        <span class="sr-only">Volume soundtrack</span>
+        <input id="musicVolume" type="range" min="0" max="100" value="60" aria-label="Volume soundtrack">
+        <output id="musicVolumeValue" for="musicVolume">60%</output>
+      </label>
+    </div>
+    <audio id="soundtrackAudio" autoplay loop preload="none"></audio>
+
+    <script type="module" src="./web-api.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "isekai-role-play",
+  "version": "1.0.0",
+  "private": true,
+  "main": "main.js",
+  "description": "Isekai Role Play - aplikasi sosial RPG lokal",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "desktop": "electron .",
+    "dev": "vite",
+    "build": "vite build",
+    "cf:dev": "npm run build && wrangler dev",
+    "cf:deploy": "npm run build && wrangler deploy",
+    "preview": "vite preview",
+    "server": "npm run build && node server.js",
+    "public": "npm run build && node server.js",
+    "tunnel": ".\\tools\\cloudflared.exe tunnel --url http://localhost:4173"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "vite": "^7.1.7",
+    "wrangler": "^4.68.0"
+  },
+  "dependencies": {
+    "ws": "^8.21.1"
+  }
+}

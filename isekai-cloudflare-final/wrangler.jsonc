@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "isekai-role-play",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-18",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/presence"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "ISEKAI", "class_name": "IsekaiServer" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["IsekaiServer"] }]
+}

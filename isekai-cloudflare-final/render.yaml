@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: isekai-role-play
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+
