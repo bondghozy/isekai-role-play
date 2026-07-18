@@ -139,7 +139,6 @@ const musicVolumeValue = document.querySelector("#musicVolumeValue");
 const musicSettingsKey = "isekai-role-play-sound";
 const storageModal = document.querySelector("#storageModal");
 const closeStorageButton = document.querySelector("#closeStorageButton");
-const settingsButton = document.querySelector("#settingsButton");
 const profileSettingsButton = document.querySelector("#profileSettingsButton");
 const profileDrawer = document.querySelector("#profileDrawer");
 const openProfileDrawer = document.querySelector("#openProfileDrawer");
@@ -1048,7 +1047,6 @@ document.querySelector("#statList").addEventListener("click", (event) => {
   renderStats();
 });
 
-settingsButton.addEventListener("click", openSettings);
 profileSettingsButton.addEventListener("click", () => { profileDrawer.classList.add("hidden"); openSettings(); });
 openProfileDrawer.addEventListener("click", () => profileDrawer.classList.remove("hidden"));
 closeProfileDrawer.addEventListener("click", () => profileDrawer.classList.add("hidden"));
