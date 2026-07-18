@@ -14,11 +14,13 @@ export class IsekaiServer extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env); this.ctx = ctx;
     this.sql = ctx.storage.sql;
-    this.sql.exec(`CREATE TABLE IF NOT EXISTS accounts(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT UNIQUE NOT NULL,username TEXT NOT NULL,password_hash TEXT NOT NULL,password_salt TEXT NOT NULL,user_json TEXT NOT NULL,updated_at TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,account_id INTEGER NOT NULL,created_at TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT,sender_id INTEGER NOT NULL,recipient_id INTEGER NOT NULL,body TEXT NOT NULL,sent_at TEXT NOT NULL,media_type TEXT,media_data TEXT,read_at TEXT);
-      CREATE TABLE IF NOT EXISTS friendships(user_one INTEGER NOT NULL,user_two INTEGER NOT NULL,created_at TEXT NOT NULL,UNIQUE(user_one,user_two));
-      CREATE TABLE IF NOT EXISTS friend_requests(id INTEGER PRIMARY KEY AUTOINCREMENT,sender_id INTEGER NOT NULL,recipient_id INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL,UNIQUE(sender_id,recipient_id));`);
+    for (const statement of [
+      "CREATE TABLE IF NOT EXISTS accounts(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT UNIQUE NOT NULL,username TEXT NOT NULL,password_hash TEXT NOT NULL,password_salt TEXT NOT NULL,user_json TEXT NOT NULL,updated_at TEXT NOT NULL)",
+      "CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,account_id INTEGER NOT NULL,created_at TEXT NOT NULL)",
+      "CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT,sender_id INTEGER NOT NULL,recipient_id INTEGER NOT NULL,body TEXT NOT NULL,sent_at TEXT NOT NULL,media_type TEXT,media_data TEXT,read_at TEXT)",
+      "CREATE TABLE IF NOT EXISTS friendships(user_one INTEGER NOT NULL,user_two INTEGER NOT NULL,created_at TEXT NOT NULL,UNIQUE(user_one,user_two))",
+      "CREATE TABLE IF NOT EXISTS friend_requests(id INTEGER PRIMARY KEY AUTOINCREMENT,sender_id INTEGER NOT NULL,recipient_id INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'pending',created_at TEXT NOT NULL,UNIQUE(sender_id,recipient_id))"
+    ]) this.sql.exec(statement);
   }
   one(query, ...args) { return [...this.sql.exec(query, ...args)][0] || null; }
   all(query, ...args) { return [...this.sql.exec(query, ...args)]; }
@@ -31,7 +33,7 @@ export class IsekaiServer extends DurableObject {
     const url = new URL(request.url);
     if (url.pathname === "/presence" && request.headers.get("upgrade") === "websocket") return this.websocket(request);
     if (!url.pathname.startsWith("/api/")) return json({ error: "Not found" }, 404);
-    try { return await this.api(request, url); } catch (error) { console.error(error); return json({ error: "Kesalahan server." }, 500); }
+    try { return await this.api(request, url); } catch (error) { console.error(error); return json({ error: "Kesalahan server.", details: String(error?.message || error) }, 500); }
   }
   async api(request, url) {
     const method = request.method, path = url.pathname, value = method === "POST" || method === "DELETE" ? await request.json().catch(() => ({})) : {};
